@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from typing import Annotated
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, APIrouter
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -21,6 +21,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Package Registry", lifespan=lifespan)
+v1 = APIrouter(prefix="/v1")
 
 
 def latest_version_select(package_id):
@@ -51,7 +52,7 @@ def health_check():
     return {"status": "ok"}
 
 
-@app.post("/packages", response_model=PackageOut, status_code=status.HTTP_201_CREATED)
+@v1.post("/packages", response_model=PackageOut, status_code=status.HTTP_201_CREATED)
 def create_package(body: PackageCreate, session: SessionDep):
     package = Package(name=body.name, description=body.description)
     session.add(package)
@@ -66,7 +67,7 @@ def create_package(body: PackageCreate, session: SessionDep):
     return package
 
 
-@app.get("/packages/{name}", response_model=PackageOut)
+@v1.get("/packages/{name}", response_model=PackageOut)
 def get_package(name: str, session: SessionDep):
     package = get_package_or_404(session, name)
     return PackageOut(
@@ -77,7 +78,7 @@ def get_package(name: str, session: SessionDep):
     )
 
 
-@app.post(
+@v1.post(
     "/packages/{name}/releases",
     response_model=ReleaseOut,
     status_code=status.HTTP_201_CREATED,
@@ -102,3 +103,5 @@ def create_release(name: str, body: ReleaseCreate, session: SessionDep):
             detail=f"{name!r} already has a release {body.version!r}",
         )
     return release
+
+app.include_router(v1)
