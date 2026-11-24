@@ -6,7 +6,7 @@ This guide covers running release-tracker from source, running the tests and bui
 
 ## What you need
 
-- Python 3.10 or later.
+- Python 3.10 or later with venv module installed.
 - A PostgreSQL server with two databases: one for the service and a separate one for the tests.
 
 ## Run from source
