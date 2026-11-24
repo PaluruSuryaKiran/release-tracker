@@ -58,3 +58,43 @@ def test_create_release_invalid_body_returns_422(client, add_package, payload):
     add_package("curl")
     response = client.post("/v1/packages/curl/releases", json=payload)
     assert response.status_code == 422
+
+def test_create_release_sets_location_header(client, add_package):
+    add_package("hello-world")
+    response = client.post(
+        "/v1/packages/hello-world/releases", json={"version": "1.0.0"}
+    )
+    assert response.status_code == 201
+    assert response.headers["Location"] == "/v1/packages/hello-world/releases/1.0.0"
+
+
+def test_get_release_returns_200_and_body(client, add_package):
+    add_package("hello-world", ["1.0.0"])
+    response = client.get("/v1/packages/hello-world/releases/1.0.0")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["version"] == "1.0.0"
+    assert "released_at" in body
+
+
+def test_get_release_of_unknown_package_returns_404(client):
+    response = client.get("/v1/packages/nope/releases/1.0.0")
+    assert response.status_code == 404
+    assert "nope" in response.json()["detail"]
+
+
+def test_get_unknown_release_returns_404(client, add_package):
+    add_package("hello-world", ["1.0.0"])
+    response = client.get("/v1/packages/hello-world/releases/2.0.0")
+    assert response.status_code == 404
+    assert "2.0.0" in response.json()["detail"]
+
+
+def test_location_header_can_be_followed(client, add_package):
+    add_package("hello-world")
+    created = client.post(
+        "/v1/packages/hello-world/releases", json={"version": "1.0.0"}
+    )
+    fetched = client.get(created.headers["Location"])
+    assert fetched.status_code == 200
+    assert fetched.json() == created.json()
