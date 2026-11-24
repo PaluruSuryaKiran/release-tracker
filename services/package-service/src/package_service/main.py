@@ -88,12 +88,8 @@ def get_package(name: str, session: SessionDep):
     )
 
 
-@v1.post(
-    "/packages/{name}/releases",
-    response_model=ReleaseOut,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_release(name: str, body: ReleaseCreate, session: SessionDep):
+@v1.post("/packages/{name}/releases", response_model=ReleaseOut, status_code=status.HTTP_201_CREATED)
+def create_release(name: str, body: ReleaseCreate, session: SessionDep, request: Request, response: Response):
     package = get_package_or_404(session, name)
     v = parse_version(body.version)
     release = Release(
@@ -111,6 +107,23 @@ def create_release(name: str, body: ReleaseCreate, session: SessionDep):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"{name!r} already has a release {body.version!r}",
+        )
+    response.headers["Location"] = request.app.url_path_for("get_release", name=name, version=release.version)
+    return release
+
+@v1.get("/packages/{name}/releases/{version}", response_model=ReleaseOut)
+def get_release(name: str, version: str, session: SessionDep):
+    package = get_package_or_404(session, name)
+    release = session.scalar(
+        select(Release).where(
+            Release.package_id == package.id,
+            Release.version == version,
+        )
+    )
+    if release is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"{name!r} has no release {version!r}",
         )
     return release
 
