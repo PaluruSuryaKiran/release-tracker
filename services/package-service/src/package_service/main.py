@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from typing import Annotated
-from fastapi import Depends, FastAPI, HTTPException, status, APIrouter
+from fastapi import Depends, FastAPI, HTTPException, status, APIrouter, Request, Response
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -53,7 +53,7 @@ def health_check():
 
 
 @v1.post("/packages", response_model=PackageOut, status_code=status.HTTP_201_CREATED)
-def create_package(body: PackageCreate, session: SessionDep):
+def create_package(body: PackageCreate, session: SessionDep, request: Request, response: Response):
     package = Package(name=body.name, description=body.description)
     session.add(package)
     try:
@@ -64,6 +64,7 @@ def create_package(body: PackageCreate, session: SessionDep):
             status_code=status.HTTP_409_CONFLICT,
             detail=f"package {body.name!r} already exists",
         )
+    response.headers["Location"] = request.app.url_path_for("get_package", name=package.name)
     return package
 
 
