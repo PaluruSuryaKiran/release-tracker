@@ -107,3 +107,16 @@ def test_package_endpoints_are_only_under_v1(client):
 def test_health_is_not_versioned(client):
     assert client.get("/health").status_code == 200
     assert client.get("/v1/health").status_code == 404
+
+def test_create_package_sets_location_header(client):
+    response = client.post("/v1/packages", json={"name": "hello-world"})
+    assert response.status_code == 201
+    assert response.headers["Location"] == "/v1/packages/hello-world"
+    assert client.get(response.headers["Location"]).status_code == 200
+
+
+def test_failed_create_has_no_location_header(client):
+    client.post("/v1/packages", json={"name": "hello-world"})
+    response = client.post("/v1/packages", json={"name": "hello-world"})
+    assert response.status_code == 409
+    assert "Location" not in response.headers
