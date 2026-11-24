@@ -1,7 +1,10 @@
 from datetime import datetime
+
 from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from package_service.db import Base
+
 
 class Package(Base):
     __tablename__ = "packages"
@@ -13,6 +16,7 @@ class Package(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     releases: Mapped[list["Release"]] = relationship(back_populates="package")
+
 
 class Release(Base):
     __tablename__ = "releases"

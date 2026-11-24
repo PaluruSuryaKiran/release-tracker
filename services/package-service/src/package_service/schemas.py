@@ -1,5 +1,7 @@
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 from package_service.versions import parse_version
 
 MAX_VERSION_PART = 100

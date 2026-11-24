@@ -1,5 +1,7 @@
 import pytest
+
 from package_service.versions import parse_version, Version
+
 
 @pytest.mark.parametrize(
     "text, expected",

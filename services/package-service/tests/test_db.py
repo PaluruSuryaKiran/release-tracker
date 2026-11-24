@@ -1,5 +1,7 @@
 from sqlalchemy import text
+
 from package_service import db
+
 
 def test_engine_can_connect():
     with db.engine.connect() as connection:

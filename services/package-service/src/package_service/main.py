@@ -12,6 +12,7 @@ from fastapi import (
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+
 from package_service.db import Base, engine, get_session
 from package_service.models import Package, Release
 from package_service.schemas import PackageCreate, PackageOut, ReleaseCreate, ReleaseOut
@@ -29,7 +30,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Package Registry", lifespan=lifespan)
-v1 = APIrouter(prefix="/v1")
+v1 = APIRouter(prefix="/v1")
 
 
 def latest_version_select(package_id):
