@@ -1,21 +1,14 @@
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    FastAPI,
-    HTTPException,
-    Request,
-    Response,
-    status,
-)
+from fastapi import APIRouter, Depends, FastAPI, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from package_service.db import Base, engine, get_session
 from package_service.models import Package, Release
+from package_service.problems import ProblemError, register_problem_handlers
 from package_service.schemas import PackageCreate, PackageOut, ReleaseCreate, ReleaseOut
 from package_service.versions import parse_version
 
@@ -32,6 +25,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="Package Registry", lifespan=lifespan)
 v1 = APIRouter(prefix="/v1")
+register_problem_handlers(app)
 
 
 def latest_version_select(package_id):
@@ -50,9 +44,9 @@ def latest_version_of(session: Session, package_id: int) -> str | None:
 def get_package_or_404(session: Session, name: str) -> Package:
     package = session.scalar(select(Package).where(Package.name == name))
     if package is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"package {name!r} not found",
+        raise ProblemError(
+            404, "package-not-found", "Package not found",
+            f"There is no package named {name!r}.",
         )
     return package
 
@@ -70,9 +64,9 @@ def create_package(body: PackageCreate, session: SessionDep, request: Request, r
         session.commit()
     except IntegrityError:
         session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"package {body.name!r} already exists",
+        raise ProblemError(
+            409, "package-exists", "Package already exists",
+            f"A package named {body.name!r} already exists.",
         )
     response.headers["Location"] = request.app.url_path_for("get_package", name=package.name)
     return package
@@ -105,12 +99,13 @@ def create_release(name: str, body: ReleaseCreate, session: SessionDep, request:
         session.commit()
     except IntegrityError:
         session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"{name!r} already has a release {body.version!r}",
+        raise ProblemError(
+            409, "release-exists", "Release already exists",
+            f"Package {name!r} already has a release {body.version!r}.",
         )
     response.headers["Location"] = request.app.url_path_for("get_release", name=name, version=release.version)
     return release
+
 
 @v1.get("/packages/{name}/releases/{version}", response_model=ReleaseOut)
 def get_release(name: str, version: str, session: SessionDep):
@@ -122,10 +117,11 @@ def get_release(name: str, version: str, session: SessionDep):
         )
     )
     if release is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"{name!r} has no release {version!r}",
+        raise ProblemError(
+            404, "release-not-found", "Release not found",
+            f"Package {name!r} has no release {version!r}.",
         )
     return release
+
 
 app.include_router(v1)
