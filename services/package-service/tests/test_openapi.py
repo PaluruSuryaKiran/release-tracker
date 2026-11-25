@@ -57,8 +57,10 @@ def test_422_is_documented_only_where_a_body_is_sent():
 
 
 def test_committed_spec_is_up_to_date():
-    committed = Path(__file__).parent.parent / "openapi.json"
-    assert committed.read_text() == render_spec(), (
-        "openapi.json is out of date. Regenerate it with:\n"
-        "    python -m package_service.export_openapi > openapi.json"
+    committed = Path(__file__).parent.parent / "docs" / "openapi.json"
+    message = (
+        "docs/openapi.json is missing or out of date. Regenerate it with:\n"
+        "    python -m package_service.export_openapi > docs/openapi.json"
     )
+    assert committed.exists(), message
+    assert committed.read_text() == render_spec(), message
