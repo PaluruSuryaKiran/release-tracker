@@ -14,7 +14,10 @@ class PackageCreate(BaseModel):
     )
 
     name: str = Field(
-        ..., min_length=2, max_length=100, pattern=r"^[a-z][a-z0-9-]*$"
+        min_length=2,
+        max_length=100,
+        pattern=r"^[a-z][a-z0-9-]*$",
+        description="Lowercase letters, digits and hyphens, starting with a letter.",
     )
     description: str = Field(default="", max_length=500)
 
@@ -33,9 +36,12 @@ class PackageOut(BaseModel):
 class ReleaseCreate(BaseModel):
     model_config = ConfigDict(
         extra="forbid"
-        )
+    )
 
-    version: str = Field(max_length=15)
+    version: str = Field(
+        max_length=15,
+        description="MAJOR.MINOR.PATCH, with no leading zeros and no `v` prefix.",
+    )
 
     @field_validator("version")
     @classmethod
