@@ -15,6 +15,7 @@ apps:
   server:
     command: bin/launch
     daemon: simple
+    stop-timeout: 30s
     install-mode: disable
     restart-condition: on-failure
     plugs:

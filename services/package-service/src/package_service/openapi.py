@@ -51,6 +51,14 @@ def problem(description: str, schema: str = "Problem") -> dict:
 INVALID = {422: problem("The request body is invalid.", "ValidationProblem")}
 
 
+UNAVAILABLE = {
+    503: problem(
+        "The database is unreachable or too slow. Retry after the number of "
+        "seconds in the `Retry-After` header."
+    )
+}
+
+
 def operation_id_from_name(route: APIRoute) -> str:
     return route.name
 

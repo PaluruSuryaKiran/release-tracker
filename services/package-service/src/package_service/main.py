@@ -20,6 +20,7 @@ from package_service.openapi import (
 from package_service.problems import ProblemError, register_problem_handlers
 from package_service.schemas import PackageCreate, PackageOut, ReleaseCreate, ReleaseOut
 from package_service.versions import parse_version
+from package_service.openapi import UNAVAILABLE
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -38,6 +39,7 @@ def service_version() -> str:
 async def lifespan(_app: FastAPI):
     Base.metadata.create_all(bind=engine)
     yield
+    engine.dispose()
 
 
 app = FastAPI(
@@ -49,7 +51,7 @@ app = FastAPI(
     generate_unique_id_function=operation_id_from_name,
     lifespan=lifespan,
 )
-v1 = APIRouter(prefix="/v1")
+v1 = APIRouter(prefix="/v1", responses=UNAVAILABLE)
 register_problem_handlers(app)
 add_problem_schemas(app)
 
