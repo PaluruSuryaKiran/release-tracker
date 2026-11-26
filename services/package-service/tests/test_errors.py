@@ -70,11 +70,9 @@ def test_wrong_method_keeps_allow_header(client):
     assert "GET" in response.headers["allow"]
 
 
-def test_database_failure_returns_500_without_leaking_details():
+def test_unexpected_error_returns_500_without_leaking_details():
     broken_session = MagicMock()
-    broken_session.scalar.side_effect = OperationalError(
-        "SELECT ...", {}, Exception("connection refused")
-    )
+    broken_session.scalar.side_effect = RuntimeError("confidential information")
     app.dependency_overrides[get_session] = lambda: broken_session
     try:
         client = TestClient(app, raise_server_exceptions=False)
@@ -84,5 +82,4 @@ def test_database_failure_returns_500_without_leaking_details():
 
     body = assert_problem(response, 500)
     assert body["type"] == "about:blank"
-    assert "connection refused" not in response.text
-    assert "SELECT" not in response.text
+    assert "confidential information" not in response.text

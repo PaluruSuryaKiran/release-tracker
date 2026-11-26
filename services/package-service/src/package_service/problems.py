@@ -7,6 +7,7 @@ from http import HTTPStatus
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import OperationalError, TimeoutError as PoolTimeoutError
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -77,6 +78,21 @@ async def handle_validation_error(
     )
 
 
+async def handle_database_unavailable(request: Request, exc: Exception) -> JSONResponse:
+    reason = getattr(exc, "orig", None) or exc
+    logger.warning(
+        f"Database unavailable on {request.method} {request.url.path}: {reason}"
+    )
+    return problem_response(
+        request,
+        503,
+        "Database unavailable",
+        "The service cannot reach its database right now. Try again shortly.",
+        type_=PROBLEM_TYPE_BASE + "database-unavailable",
+        headers={"Retry-After": "5"},
+    )
+
+
 async def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
     logger.exception("Unhandled error on %s %s", request.method, request.url.path)
     return problem_response(
@@ -88,4 +104,6 @@ def register_problem_handlers(app) -> None:
     app.add_exception_handler(ProblemError, handle_problem_error)
     app.add_exception_handler(StarletteHTTPException, handle_http_exception)
     app.add_exception_handler(RequestValidationError, handle_validation_error)
+    app.add_exception_handler(OperationalError, handle_database_unavailable)
+    app.add_exception_handler(PoolTimeoutError, handle_database_unavailable)
     app.add_exception_handler(Exception, handle_unexpected_error)
