@@ -194,9 +194,9 @@
   },
   "openapi": "3.1.0",
   "paths": {
-    "/health": {
+    "/livez": {
       "get": {
-        "description": "Returns `{\"status\": \"ok\"}` while the process is up. Not versioned.",
+        "description": "Returns `{\"status\": \"ok\"}` while the process is up.",
         "operationId": "health_check",
         "responses": {
           "200": {
@@ -209,6 +209,26 @@
           }
         },
         "summary": "Check that the service is running",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "description": "Returns `{\"status\": \"ok\"}` if the database is reachable.",
+        "operationId": "readiness_check",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check that the service is ready to serve requests",
         "tags": [
           "health"
         ]
@@ -258,6 +278,16 @@
               }
             },
             "description": "The request body is invalid."
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The database is unreachable or too slow. Retry after the number of seconds in the `Retry-After` header."
           }
         },
         "summary": "Create a package",
@@ -301,6 +331,16 @@
               }
             },
             "description": "There is no package with this name."
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The database is unreachable or too slow. Retry after the number of seconds in the `Retry-After` header."
           }
         },
         "summary": "Get a package",
@@ -374,6 +414,16 @@
               }
             },
             "description": "The request body is invalid."
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The database is unreachable or too slow. Retry after the number of seconds in the `Retry-After` header."
           }
         },
         "summary": "Add a release",
@@ -426,6 +476,16 @@
               }
             },
             "description": "There is no such package, or it has no such release."
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The database is unreachable or too slow. Retry after the number of seconds in the `Retry-After` header."
           }
         },
         "summary": "Get a release",

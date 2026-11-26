@@ -3,13 +3,14 @@
 import logging
 
 from http import HTTPStatus
-
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import OperationalError, TimeoutError as PoolTimeoutError
-
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from package_service.logging import REQUEST_ID_HEADER, request_id_var
+
 
 logger = logging.getLogger(__name__)
 
@@ -94,9 +95,13 @@ async def handle_database_unavailable(request: Request, exc: Exception) -> JSONR
 
 
 async def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
-    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    request_id = request_id_var.get()
     return problem_response(
-        request, 500, "Internal Server Error", "An unexpected error occurred."
+        request,
+        500, 
+        "Internal Server Error", 
+        "An unexpected error occurred.",
+        headers={REQUEST_ID_HEADER: request_id} if request_id else None,
     )
 
 

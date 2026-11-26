@@ -13,6 +13,7 @@ from package_service.openapi import (
     DESCRIPTION,
     INVALID,
     TAGS,
+    UNAVAILABLE,
     add_problem_schemas,
     operation_id_from_name,
     problem,
@@ -20,7 +21,8 @@ from package_service.openapi import (
 from package_service.problems import ProblemError, register_problem_handlers
 from package_service.schemas import PackageCreate, PackageOut, ReleaseCreate, ReleaseOut
 from package_service.versions import parse_version
-from package_service.openapi import UNAVAILABLE
+from package_service.logging import add_request_id_middleware, configure_logging
+
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -34,6 +36,7 @@ def service_version() -> str:
     except PackageNotFoundError:
         return "0.0.0"
 
+configure_logging()
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -51,8 +54,13 @@ app = FastAPI(
     generate_unique_id_function=operation_id_from_name,
     lifespan=lifespan,
 )
+
 v1 = APIRouter(prefix="/v1", responses=UNAVAILABLE)
+
 register_problem_handlers(app)
+
+add_request_id_middleware(app)
+
 add_problem_schemas(app)
 
 
