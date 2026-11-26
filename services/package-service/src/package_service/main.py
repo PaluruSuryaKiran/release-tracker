@@ -3,8 +3,8 @@ from importlib.metadata import PackageNotFoundError, version as package_version
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI, Request, Response, status
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select, text
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from package_service.db import Base, engine, get_session
@@ -77,10 +77,31 @@ def get_package_or_404(session: Session, name: str) -> Package:
     return package
 
 
-@app.get("/health", tags=["health"], summary="Check that the service is running")
+@app.get(
+    "/livez",
+    tags=["health"],
+    summary="Check that the service is running"
+)
+@app.get("/health", include_in_schema=False)
 def health_check():
-    """Returns `{"status": "ok"}` while the process is up. Not versioned."""
+    """Returns `{"status": "ok"}` while the process is up."""
     return {"status": "ok"}
+
+@app.get(
+    "/readyz",
+    tags=["health"],
+    summary="Check that the service is ready to serve requests",
+)
+def readiness_check(session: SessionDep):
+    """Returns `{"status": "ok"}` if the database is reachable."""
+    try:
+        session.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        raise ProblemError(
+            503, "not-ready", "Service is not ready",
+            f"The database is not reachable",
+        )
+    return {"status": "ready"}
 
 
 @v1.post(

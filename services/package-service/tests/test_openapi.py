@@ -20,6 +20,7 @@ def test_operation_ids_are_handler_names():
     }
     assert ids == {
         "health_check",
+        "readiness_check",
         "create_package",
         "get_package",
         "create_release",

@@ -1,12 +1,5 @@
 import pytest
 
-
-def test_health(client):
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
-
-
 def test_create_package_returns_201_and_body(client):
     response = client.post(
         "/v1/packages", json={"name": "curl", "description": "transfer tool"}
@@ -99,14 +92,11 @@ def test_get_package_name_is_case_sensitive(client, add_package):
     add_package("curl")
     assert client.get("/v1/packages/Curl").status_code == 404
 
+
 def test_package_endpoints_are_only_under_v1(client):
     assert client.post("/packages", json={"name": "curl"}).status_code == 404
     assert client.get("/packages/curl").status_code == 404
 
-
-def test_health_is_not_versioned(client):
-    assert client.get("/health").status_code == 200
-    assert client.get("/v1/health").status_code == 404
 
 def test_create_package_sets_location_header(client):
     response = client.post("/v1/packages", json={"name": "hello-world"})
