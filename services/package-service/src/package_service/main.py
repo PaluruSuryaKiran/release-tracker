@@ -14,6 +14,7 @@ from package_service.openapi import (
     INVALID,
     TAGS,
     UNAVAILABLE,
+    UNAUTHORIZED,
     add_problem_schemas,
     operation_id_from_name,
     problem,
@@ -22,6 +23,7 @@ from package_service.problems import ProblemError, register_problem_handlers
 from package_service.schemas import PackageCreate, PackageOut, ReleaseCreate, ReleaseOut
 from package_service.versions import parse_version
 from package_service.log_setup import add_request_id_middleware, configure_logging
+from package_service.auth import require_api_key
 
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -120,10 +122,15 @@ def readiness_check(session: SessionDep):
     status_code=status.HTTP_201_CREATED,
     tags=["packages"],
     summary="Create a package",
-    responses={409: problem("A package with this name already exists."), **INVALID},
+    dependencies=[Depends(require_api_key)],
+    responses={
+        **UNAUTHORIZED,
+        409: problem("A package with this name already exists."), 
+        **INVALID},
 )
 def create_package(
-    body: PackageCreate, session: SessionDep, request: Request, response: Response
+    body: PackageCreate, session: SessionDep, 
+    request: Request, response: Response,
 ):
     """Registers a new package. The `Location` header points to the new package."""
     package = Package(name=body.name, description=body.description)
@@ -166,7 +173,9 @@ def get_package(name: str, session: SessionDep):
     status_code=status.HTTP_201_CREATED,
     tags=["releases"],
     summary="Add a release",
+    dependencies=[Depends(require_api_key)],
     responses={
+        **UNAUTHORIZED,
         404: problem("There is no package with this name."),
         409: problem("The package already has this version."),
         **INVALID,

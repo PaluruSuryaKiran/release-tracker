@@ -7,10 +7,11 @@ from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from package_service.problems import ProblemError
+from package_service.settings import secret
 
 load_dotenv()
 
-API_KEY = os.environ.get("API_KEY")
+API_KEY = secret("API_KEY")
 if not API_KEY:
     raise RuntimeError("API_KEY is not set. Copy .env.example to .env and fill it in.")
 

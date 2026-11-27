@@ -1,12 +1,12 @@
 import os
 
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-load_dotenv() 
+from package_service.settings import secret
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+
+DATABASE_URL = secret("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError(
         "DATABASE_URL is not set. Copy .env.example to .env and fill it in."

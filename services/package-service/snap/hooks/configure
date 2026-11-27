@@ -1,15 +1,7 @@
 #!/bin/sh
 set -e
 
-url="$(snapctl get database-url)"
 port="$(snapctl get port)"
-
-if [ -n "$url" ]; then
-    case "$url" in
-        postgresql+psycopg://*) ;;
-        *) echo "database-url must start with postgresql+psycopg://" >&2; exit 1 ;;
-    esac
-fi
 
 if [ -n "$port" ]; then
     case "$port" in
@@ -17,7 +9,6 @@ if [ -n "$port" ]; then
     esac
 fi
 
-if [ -n "$url" ]; then
-    snapctl start --enable "$SNAP_INSTANCE_NAME.server"
+if snapctl services "$SNAP_INSTANCE_NAME.server" | grep -qw active; then
     snapctl restart "$SNAP_INSTANCE_NAME.server"
 fi

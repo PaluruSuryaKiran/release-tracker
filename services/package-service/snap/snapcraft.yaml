@@ -6,8 +6,10 @@ summary: Track package releases through a small REST API
 description: |
   A FastAPI service that registers packages and their releases,
   and reports each package's latest version by semantic version order.
-  Needs a PostgreSQL database. Configure it with:
-    sudo snap set release-tracker-surya database-url=postgresql+psycopg://USER:PASSWORD@HOST/DB
+  Needs a PostgreSQL database. The database URL and the API key are read
+  from root-only files in /var/snap/release-tracker-surya/common/.
+  See the README for setup.
+  
 grade: devel
 confinement: strict
 
@@ -18,6 +20,9 @@ apps:
     stop-timeout: 30s
     install-mode: disable
     restart-condition: on-failure
+    environment:
+      DATABASE_URL: $SNAP_COMMON/database-url
+      API_KEY: $SNAP_COMMON/api-key
     plugs:
       - network
       - network-bind

@@ -1,12 +1,12 @@
 #!/bin/sh
 set -e
 
-DATABASE_URL="$(snapctl get database-url)"
-if [ -z "$DATABASE_URL" ]; then
-    echo "database-url is not set. Run: sudo snap set $SNAP_INSTANCE_NAME database-url=..." >&2
-    exit 1
-fi
-export DATABASE_URL
+for file in "$DATABASE_URL_FILE" "$API_KEY_FILE"; do
+    if [ ! -s "$file" ]; then
+        echo "Missing secret file $file. See the README's Quick start to create it." >&2
+        exit 1
+    fi
+done
 
 PORT="$(snapctl get port)"
 PORT="${PORT:-8000}"
