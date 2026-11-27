@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from package_service.db import get_session
 from package_service.main import app
-from package_service.logging import JsonFormatter, request_id_var
+from package_service.log_setup import JsonFormatter, request_id_var
 
 
 def test_response_gets_a_new_request_id(client):

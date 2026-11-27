@@ -21,7 +21,7 @@ from package_service.openapi import (
 from package_service.problems import ProblemError, register_problem_handlers
 from package_service.schemas import PackageCreate, PackageOut, ReleaseCreate, ReleaseOut
 from package_service.versions import parse_version
-from package_service.logging import add_request_id_middleware, configure_logging
+from package_service.log_setup import add_request_id_middleware, configure_logging
 
 
 SessionDep = Annotated[Session, Depends(get_session)]

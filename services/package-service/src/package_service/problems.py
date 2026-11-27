@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import OperationalError, TimeoutError as PoolTimeoutError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from package_service.logging import REQUEST_ID_HEADER, request_id_var
+from package_service.log_setup import REQUEST_ID_HEADER, request_id_var
 
 
 logger = logging.getLogger(__name__)
