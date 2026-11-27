@@ -59,6 +59,13 @@ UNAVAILABLE = {
 
 UNAUTHORIZED = {401: problem("The API key is missing or wrong.")}
 
+RATE_LIMITED = {
+    429: problem(
+        "Too many requests from this client. Retry after the number of seconds "
+        "in the `Retry-After` header."
+    )
+}
+
 
 def operation_id_from_name(route: APIRoute) -> str:
     return route.name

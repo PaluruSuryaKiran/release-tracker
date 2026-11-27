@@ -15,6 +15,7 @@ from package_service.openapi import (
     TAGS,
     UNAVAILABLE,
     UNAUTHORIZED,
+    RATE_LIMITED,
     add_problem_schemas,
     operation_id_from_name,
     problem,
@@ -24,6 +25,7 @@ from package_service.schemas import PackageCreate, PackageOut, ReleaseCreate, Re
 from package_service.versions import parse_version
 from package_service.log_setup import add_request_id_middleware, configure_logging
 from package_service.auth import require_api_key
+from package_service.rate_limit import rate_limit
 
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -57,7 +59,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-v1 = APIRouter(prefix="/v1", responses=UNAVAILABLE)
+v1 = APIRouter(
+    prefix="/v1", 
+    dependencies=[Depends(rate_limit)], 
+    responses={
+        **UNAVAILABLE,
+        **RATE_LIMITED
+    }
+)
 
 register_problem_handlers(app)
 

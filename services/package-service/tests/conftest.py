@@ -26,6 +26,7 @@ from package_service.db import Base
 from package_service.main import app  
 from package_service.models import Package, Release  
 from package_service.versions import parse_version  
+from package_service import rate_limit
 
 
 @pytest.fixture
@@ -64,3 +65,8 @@ def add_package(session):
         return package
 
     return _add
+
+@pytest.fixture(autouse=True)
+def fresh_rate_limits():
+    """Start every test with full buckets, so tests cannot rate-limit each other."""
+    rate_limit.reset()
