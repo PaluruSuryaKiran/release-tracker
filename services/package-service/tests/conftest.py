@@ -10,6 +10,9 @@ if not TEST_DATABASE_URL:
 if TEST_DATABASE_URL == os.environ.get("DATABASE_URL"):
     raise RuntimeError("TEST_DATABASE_URL must differ from DATABASE_URL: the tests drop all tables.")
 
+TEST_API_KEY = "test-api-key"
+os.environ["API_KEY"] = TEST_API_KEY
+
 # Must happen before anything imports package_service, because db.py reads
 # DATABASE_URL at import time. Keep the imports below this line.
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
@@ -42,7 +45,7 @@ def session(engine):
 
 @pytest.fixture
 def client(engine):
-    return TestClient(app)
+    return TestClient(app, headers={"Authorization": f"Bearer {TEST_API_KEY}"})
 
 
 @pytest.fixture

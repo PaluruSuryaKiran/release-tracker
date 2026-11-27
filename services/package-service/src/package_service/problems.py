@@ -20,12 +20,14 @@ PROBLEM_CONTENT_TYPE = "application/problem+json"
 
 class ProblemError(Exception):
 
-    def __init__(self, status: int, slug: str, title: str, detail: str):
+    def __init__(self, status: int, slug: str, title: str, 
+                    detail: str, headers: dict | None = None):
         super().__init__(detail)
         self.status = status
         self.slug = slug
         self.title = title
         self.detail = detail
+        self.headers = headers
 
 
 def problem_response(request: Request, status: int, title: str, detail: str,
@@ -45,7 +47,8 @@ def problem_response(request: Request, status: int, title: str, detail: str,
 
 async def handle_problem_error(request: Request, exc: ProblemError) -> JSONResponse:
     return problem_response(
-        request, exc.status, exc.title, exc.detail, PROBLEM_TYPE_BASE + exc.slug
+        request, exc.status, exc.title, exc.detail, 
+        PROBLEM_TYPE_BASE + exc.slug, headers=exc.headers
     )
 
 
